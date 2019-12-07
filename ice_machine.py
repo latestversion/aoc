@@ -1,7 +1,9 @@
 class IceMachine:
+    STATUS_OK = 0
     STATUS_WAITING_FOR_INPUT = 1
     STATUS_PROGRAM_ENDED = 2
     STATUS_EXCEPTION = 3
+    STATUS_BP = 4
 
     def __init__(self, program, inputed):
         self.program = program
@@ -9,7 +11,7 @@ class IceMachine:
         self.output = 0
         self.num_flanks = 0
         self.last_opcode = 0
-        self.status = 0
+        self.status = IceMachine.STATUS_OK
         self.num_flanks = 0
         self.input = inputed
         self.breakpoints = []
@@ -29,9 +31,25 @@ class IceMachine:
                     s += " {} ".format(ins)
             print(s)
 
+    def bp(self, addr):
+        if addr not in self.breakpoints:
+            self.breakpoints.append(addr)
+
+    def bp_clear(self, addr):
+        self.breakpoints.remove(addr)
+
     def run(self):
-        while self.status is not IceMachine.STATUS_PROGRAM_ENDED and self.status is not IceMachine.STATUS_WAITING_FOR_INPUT and self.pc not in self.breakpoints:
+        # Check statuses set by opcodes first
+        while self.status is not IceMachine.STATUS_PROGRAM_ENDED and self.status is not IceMachine.STATUS_WAITING_FOR_INPUT:
+            if self.pc in self.breakpoints:
+                if self.status != IceMachine.STATUS_BP:
+                    self.status = IceMachine.STATUS_BP
+                    return
+                else:
+                    self.status = IceMachine.STATUS_OK
             self.highflank()
+            # DON'T set any statuses here, as it might overwrite what the opcodes set
+            # TODO: Move breakpoint and exception indication to dedicated signals
 
     def highflank(self):
         ins = self.program[self.pc]
@@ -261,3 +279,22 @@ except UnknownOpCodeException:
     assert __vm.status == IceMachine.STATUS_EXCEPTION
 else:
     assert 0
+
+__program = [99]
+__vm = IceMachine(__program.copy(), [0])
+__vm.bp(0)
+__vm.run()
+assert __vm.status == IceMachine.STATUS_BP
+__vm.run()
+assert __vm.status == IceMachine.STATUS_PROGRAM_ENDED
+
+__program = [1101, 50, 50, 13, 1101, 50, 50, 13, 1101, 50, 50, 13, 99, 0]
+__vm = IceMachine(__program.copy(), [0])
+__vm.bp(4)
+__vm.bp(8)
+__vm.run()
+assert __vm.status == IceMachine.STATUS_BP
+assert __vm.pc == 4
+__vm.bp_clear(8)
+__vm.run()
+assert __vm.status == IceMachine.STATUS_PROGRAM_ENDED
