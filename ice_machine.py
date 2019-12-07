@@ -1,4 +1,3 @@
-
 class IceMachine:
     STATUS_WAITING_FOR_INPUT = 1
     STATUS_PROGRAM_ENDED = 2
@@ -110,13 +109,11 @@ class IceMachine:
                 return 0
             addr = program[self.pc + 1]
             self.store(addr, self.input.pop(0))
-            #print("program[{}] = 5".format(addr))
+            # print("program[{}] = 5".format(addr))
             return 2
         elif opcode == 4:
             val = self.load(self.pc + 1, decoded[1])
             self.output = val
-            if self.output == 0:
-                self.last_ok_output_pc = self.pc
             return 2
         elif opcode == 5:  # jump-if-true
             val1 = self.load(self.pc + 1, decoded[1])
@@ -159,13 +156,17 @@ class IceMachine:
 
         else:
             self.status = IceMachine.STATUS_EXCEPTION
-            raise UnknownOpCodeException("Unknown opcode {} for pc = {}".format(opcode, self.pc))
+            msg = "Unknown opcode {} for pc = {}, *pc = {}".format(opcode, self.pc, self.program[self.pc])
+            raise UnknownOpCodeException(msg)
+
 
 class AddressOutOfBoundsException(Exception):
     pass
 
+
 class UnknownOpCodeException(Exception):
     pass
+
 
 print("Running IceMachine Verification Suite 0.1")
 
