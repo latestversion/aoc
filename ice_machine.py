@@ -15,6 +15,25 @@ class IceMachine:
         self.num_flanks = 0
         self.input = inputed
         self.breakpoints = []
+        self.snapshot = program.copy()
+
+    def save_snapshot(self):
+        self.snapshot = self.program.copy()
+
+    def snapshot_diff(self):
+        assert len(self.snapshot) == len(self.program)
+        diffs = []
+        for pc in range(0, len(self.snapshot)):
+            old = self.snapshot[pc]
+            new = self.program[pc]
+            if old != new:
+                diffs.append((pc, old, new))
+        return diffs
+
+    def p_snapshot_diff(self):
+        diffs = self.snapshot_diff()
+        for diff in diffs:
+            print("{}: {} -> {}".format(diff[0], diff[1], diff[2]))
 
     def dump_ints(self, addr, rows, cols=4):
         assert rows > 0
@@ -297,4 +316,28 @@ assert __vm.status == IceMachine.STATUS_BP
 assert __vm.pc == 4
 __vm.bp_clear(8)
 __vm.run()
+assert __vm.status == IceMachine.STATUS_PROGRAM_ENDED
+
+__program = [1101, 1, 0, 13, 1101, 2, 0, 0, 1101, 3, 0, 4, 99, 0]
+__vm = IceMachine(__program.copy(), [0])
+__vm.run()
+__diffs = __vm.snapshot_diff()
+assert __diffs[0] == (0, 1101, 2)
+assert __diffs[1] == (4, 1101, 3)
+assert __diffs[2] == (13, 0, 1)
+assert len(__diffs) == 3
+assert __vm.status == IceMachine.STATUS_PROGRAM_ENDED
+
+__program = [1101, 1, 0, 13, 1101, 2, 0, 0, 1101, 3, 0, 4, 99, 0]
+__vm = IceMachine(__program.copy(), [0])
+__vm.bp(4)
+__vm.run()
+__diffs = __vm.snapshot_diff()
+assert __diffs[0] == (13, 0, 1)
+__vm.save_snapshot()
+__vm.run()
+__diffs = __vm.snapshot_diff()
+assert __diffs[0] == (0, 1101, 2)
+assert __diffs[1] == (4, 1101, 3)
+assert len(__diffs) == 2
 assert __vm.status == IceMachine.STATUS_PROGRAM_ENDED
