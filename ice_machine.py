@@ -11,10 +11,24 @@ class IceMachine:
         self.num_flanks = 0
         self.last_opcode = 0
         self.status = 0
-        self.last_ok_output_pc = 0
         self.num_flanks = 0
         self.input = inputed
         self.breakpoints = []
+
+    def dump_ints(self, addr, rows, cols=4):
+        assert rows > 0
+        assert cols > 0
+
+        for row in range(0, rows):
+            s = "{} ".format(addr + row * cols)
+            for col in range(0, cols):
+                pointer = addr + row*cols + col
+                if pointer >= len(self.program):
+                    s += " OOM "
+                else:
+                    ins = self.program[pointer]
+                    s += " {} ".format(ins)
+            print(s)
 
     def run(self):
         while self.status is not IceMachine.STATUS_PROGRAM_ENDED and self.status is not IceMachine.STATUS_WAITING_FOR_INPUT and self.pc not in self.breakpoints:
