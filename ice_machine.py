@@ -42,7 +42,11 @@ class IceMachine:
         self.pc += dpc
         self.num_flanks += 1
 
+    def step(self):
+        self.highflank()
+
         # naming convention a tad asymmetric
+
     def readAndClearOutput(self):
         tmp = self.output
         self.output = 0
