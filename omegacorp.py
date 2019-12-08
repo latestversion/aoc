@@ -1,3 +1,6 @@
+
+""" VirtualFury (TM), the powerful next generation Intcode processor """
+
 class VirtualFury:
     STATUS_OK = 0
     STATUS_WAITING_FOR_INPUT = 1
