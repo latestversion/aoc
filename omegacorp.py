@@ -60,9 +60,11 @@ class VirtualFury:
     def bp_clear(self, addr):
         self.breakpoints.remove(addr)
 
-    def run(self):
+    def run(self, steps=None):
         # Check statuses set by opcodes first
-        while self.status is not VirtualFury.STATUS_PROGRAM_ENDED and self.status is not VirtualFury.STATUS_WAITING_FOR_INPUT:
+        while (steps is None or steps > 0) and \
+                self.status is not VirtualFury.STATUS_PROGRAM_ENDED and \
+                self.status is not VirtualFury.STATUS_WAITING_FOR_INPUT:
             if self.pc in self.breakpoints:
                 if self.status != VirtualFury.STATUS_BP:
                     self.status = VirtualFury.STATUS_BP
@@ -72,6 +74,8 @@ class VirtualFury:
             self.highflank()
             # DON'T set any statuses here, as it might overwrite what the opcodes set
             # TODO: Move breakpoint and exception indication to dedicated signals
+            if steps is not None:
+                steps -= 1
 
     def highflank(self):
         ins = self.program[self.pc]
@@ -336,4 +340,22 @@ __diffs = __vm.snapshot_diff()
 assert __diffs[0] == (0, 1101, 2)
 assert __diffs[1] == (4, 1101, 3)
 assert len(__diffs) == 2
+assert __vm.status == VirtualFury.STATUS_PROGRAM_ENDED
+
+# Test run(2) runs 2 instructions
+__program = [1101, 1, 0, 13, 1101, 2, 0, 0, 1101, 3, 0, 4, 99, 0]
+__vm = VirtualFury(__program.copy())
+__vm.run(2)
+assert __vm.pc == 8
+__vm.run()
+assert __vm.status == VirtualFury.STATUS_PROGRAM_ENDED
+
+# Test run(x) heeds breakpoints
+__program = [1101, 1, 0, 13, 1101, 2, 0, 0, 1101, 3, 0, 4, 99, 0]
+__vm = VirtualFury(__program.copy())
+__vm.bp(4)
+__vm.run(200)
+assert __vm.status == VirtualFury.STATUS_BP
+assert __vm.pc == 4
+__vm.run()
 assert __vm.status == VirtualFury.STATUS_PROGRAM_ENDED
