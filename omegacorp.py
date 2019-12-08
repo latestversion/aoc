@@ -81,13 +81,6 @@ class VirtualFury:
     def step(self):
         self.highflank()
 
-        # naming convention a tad asymmetric
-
-    def readAndClearOutput(self):
-        tmp = self.output
-        self.output = 0
-        return tmp
-
     def decode_instruction(self, i):
         opcode = i % 100
         i -= opcode
