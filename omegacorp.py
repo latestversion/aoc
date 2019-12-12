@@ -9,6 +9,8 @@ class VirtualFury:
     STATUS_EXCEPTION = 3
     STATUS_BP = 4
 
+    OP_CODE_NAMES = {1: "ADD", 2: "MUL", 3: "INP", 4: "OUT", 5: "JIT", 6: "JIF", 7: "LT<", 8: "EQU", 9: "ARB", 99: "EOP"}
+
     def __init__(self, program, inputed=[]):
         self.program = defaultdict(int)
         for i, p in enumerate(program):
