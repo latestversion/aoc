@@ -23,7 +23,7 @@ class VirtualFury:
         self.num_flanks = 0
         self.input = inputed
         self.breakpoints = []
-        self.snapshot = program.copy()
+        self.snapshot = self.program.copy()
         self.relative_base = 0
         self.out_buffer = []
 
@@ -31,13 +31,15 @@ class VirtualFury:
         self.snapshot = self.program.copy()
 
     def snapshot_diff(self):
-        assert len(self.snapshot) == len(self.program)
         diffs = []
-        for pc in range(0, len(self.snapshot)):
-            old = self.snapshot[pc]
-            new = self.program[pc]
-            if old != new:
-                diffs.append((pc, old, new))
+        for pc in self.program:
+            if pc not in self.snapshot:
+                diffs.append((pc, 0, self.program[pc]))
+            else:
+                new = self.program[pc]
+                old = self.snapshot[pc]
+                if old != new:
+                    diffs.append((pc, old, new))
         return diffs
 
     def p_snapshot_diff(self):
